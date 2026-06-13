@@ -444,6 +444,7 @@
                 DOM.txtMarkdown.value = state.outputs.outMarkdown = generateMarkdown(rawHtml);
                 DOM.txtHtml.value = state.outputs.outHtml = generateHTML(rawHtml);
                 DOM.txtDita.value = state.outputs.outDita = generateDITA(rawHtml);
+                DOM.txtJson.value = state.outputs.outJson = generateJSON(rawHtml);
 
                 // AI Processing
                 if (state.apiKey) {
@@ -452,13 +453,11 @@
                     if(aiResults) {
                         state.outputs.outSummary = aiResults.summary;
                         state.outputs.outChecklist = aiResults.checklist;
-                        state.outputs.outJson = aiResults.json_data;
                         state.outputs.outSocial = aiResults.social_thread;
                         state.outputs.outSlack = aiResults.slack_format;
                         
                         renderSummary(aiResults.summary);
                         renderChecklist(aiResults.checklist);
-                        DOM.txtJson.value = aiResults.json_data;
                         DOM.txtSocial.value = aiResults.social_thread;
                         DOM.txtSlack.value = aiResults.slack_format;
                     }
@@ -466,13 +465,11 @@
                     const ph = getPlaceholders(cleanText);
                     state.outputs.outSummary = ph.summary;
                     state.outputs.outChecklist = ph.checklist;
-                    state.outputs.outJson = ph.json_data;
                     state.outputs.outSocial = ph.social_thread;
                     state.outputs.outSlack = ph.slack_format;
                     
                     renderSummary(ph.summary, true);
                     renderChecklist(ph.checklist, true);
-                    DOM.txtJson.value = ph.json_data;
                     DOM.txtSocial.value = ph.social_thread;
                     DOM.txtSlack.value = ph.slack_format;
                 }
@@ -624,6 +621,80 @@
             return dita;
         }
 
+        // JSON Generator
+        function generateJSON(htmlInput) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlInput, 'text/html');
+            
+            let title = "Clean Slate Document";
+            const firstH = doc.querySelector('h1, h2, h3');
+            if (firstH) {
+                title = firstH.textContent.trim();
+            }
+
+            const blocks = [];
+            
+            function processNode(node) {
+                if (node.nodeType === 3) {
+                    const text = node.textContent.trim();
+                    if (text && node.parentNode.tagName.toLowerCase() === 'body') {
+                        blocks.push({ type: 'paragraph', content: text });
+                    }
+                    return;
+                }
+                if (node.nodeType !== 1) return;
+
+                const tag = node.tagName.toLowerCase();
+                
+                if (['h1','h2','h3','h4','h5','h6'].includes(tag)) {
+                    const text = node.textContent.trim();
+                    if (text) blocks.push({ type: 'heading', level: parseInt(tag[1]), content: text });
+                    return;
+                }
+                
+                if (tag === 'p' || tag === 'div' || tag === 'section' || tag === 'article' || tag === 'blockquote') {
+                    if (node.querySelector('h1, h2, h3, h4, h5, h6, ul, ol, p, div')) {
+                        for (let child of node.childNodes) {
+                            processNode(child);
+                        }
+                    } else {
+                        const text = node.textContent.trim();
+                        if (text) blocks.push({ type: 'paragraph', content: text });
+                    }
+                    return;
+                }
+                
+                if (tag === 'ul' || tag === 'ol') {
+                    const items = Array.from(node.querySelectorAll('li')).map(li => li.textContent.trim()).filter(t => t);
+                    if (items.length > 0) {
+                        blocks.push({ type: 'list', style: tag === 'ul' ? 'unordered' : 'ordered', items: items });
+                    }
+                    return;
+                }
+                
+                for (let child of node.childNodes) {
+                    processNode(child);
+                }
+            }
+
+            processNode(doc.body);
+            
+            if (blocks.length === 0) {
+                const textLines = doc.body.textContent.split('\n').map(l => l.trim()).filter(l => l);
+                textLines.forEach(line => blocks.push({ type: 'paragraph', content: line }));
+            }
+
+            const result = {
+                document: {
+                    title: title,
+                    word_count: blocks.reduce((acc, b) => acc + (b.content ? b.content.split(/\s+/).length : (b.items ? b.items.join(' ').split(/\s+/).length : 0)), 0),
+                    blocks: blocks
+                }
+            };
+            
+            return JSON.stringify(result, null, 2);
+        }
+
         // AI Processing
         async function fetchAIProcessing(text, apiKey) {
             try {
@@ -638,12 +709,11 @@
                         messages: [
                             {
                                 role: "system", 
-                                content: `You are an expert text distillation engine. Analyze the provided text and output a JSON object with exactly 5 keys:
+                                content: `You are an expert text distillation engine. Analyze the provided text and output a JSON object with exactly 4 keys:
 1. "summary": A JSON array of exactly 3 strings (dense bullet points summarizing core message).
 2. "checklist": A JSON array of strings (actionable tasks/deadlines).
-3. "json_data": A structured JSON object containing "title", "author" (if any), "key_topics" (array), and "short_description".
-4. "social_thread": A string formatted as a numbered Twitter/X thread (e.g. "1/5... \\n\\n2/5...").
-5. "slack_format": A string formatted using Slack markdown (with emojis, bolding, blockquotes) optimized for team reading.`
+3. "social_thread": A string formatted as a numbered Twitter/X thread (e.g. "1/5... \\n\\n2/5...").
+4. "slack_format": A string formatted using Slack markdown (with emojis, bolding, blockquotes) optimized for team reading.`
                             },
                             {
                                 role: "user",
@@ -663,7 +733,6 @@
                 return {
                     summary: content.summary || [],
                     checklist: content.checklist || [],
-                    json_data: JSON.stringify(content.json_data || {}, null, 2),
                     social_thread: content.social_thread || "",
                     slack_format: content.slack_format || ""
                 };
@@ -718,7 +787,6 @@
                 const msg = `<p class="text-slate-500 italic text-center mt-10">Add an API Key in Settings to enable AI generation.</p>`;
                 DOM.contentSummary.innerHTML = msg;
                 DOM.contentChecklist.innerHTML = msg;
-                DOM.txtJson.value = "";
                 DOM.txtSocial.value = "";
                 DOM.txtSlack.value = "";
             }
@@ -746,11 +814,6 @@
                     "Add API key in Settings to unlock AI extraction",
                     "Verify parsed output formats"
                 ],
-                json_data: JSON.stringify({
-                    title: title,
-                    short_description: desc,
-                    key_topics: ["demo", "placeholder", "add_api_key_for_real_data"]
-                }, null, 2),
                 social_thread: social + "\n\n(Provide API key for AI generation)",
                 slack_format: slack
             };
