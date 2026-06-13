@@ -32,18 +32,27 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
         
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .tab-active { border-bottom: 2px solid #3b82f6; color: #eff6ff; }
         .tab-inactive { color: #94a3b8; border-bottom: 2px solid transparent; }
         .tab-inactive:hover { color: #cbd5e1; }
+        
+        @media print {
+            body * { display: none !important; }
+            body.printing #printArea { display: block !important; color: black; font-family: sans-serif; font-size: 11pt; white-space: pre-wrap; word-wrap: break-word; padding: 0.5in; }
+            body.printing { background: white !important; }
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-200 font-sans h-screen flex flex-col overflow-hidden selection:bg-blue-500/30">
 
     <!-- Header -->
-    <header class="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm z-10">
+    <header class="flex justify-between items-center px-6 py-4 border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm z-10 shrink-0">
         <div class="flex items-center gap-2">
             <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
             <h1 class="text-xl font-semibold tracking-tight text-white">Clean Slate</h1>
@@ -66,7 +75,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-1">OpenAI API Key</label>
-                        <p class="text-xs text-slate-500 mb-2">Required for Summary and Checklist variants. Stored locally in your browser.</p>
+                        <p class="text-xs text-slate-500 mb-2">Required for AI variants (JSON, Social, Slack, Summary, Checklist). Stored locally.</p>
                         <input type="password" id="inputApiKey" placeholder="sk-..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
                     </div>
                 </div>
@@ -77,16 +86,16 @@
         </div>
 
         <!-- Left Viewport: Input -->
-        <section class="flex-1 border-r border-slate-800 flex flex-col bg-slate-900">
-            <div class="p-4 flex justify-between items-center bg-slate-850/50">
+        <section class="flex-1 border-r border-slate-800 flex flex-col bg-slate-900 min-w-0">
+            <div class="p-4 flex justify-between items-center bg-slate-850/50 shrink-0">
                 <h2 class="text-sm font-medium text-slate-400 uppercase tracking-wider">Raw Input</h2>
                 <div class="flex gap-2">
                     <button id="btnClear" class="text-xs text-slate-400 hover:text-rose-400 transition-colors px-2 py-1 rounded hover:bg-slate-800">Clear Slate</button>
                     <button id="btnPaste" class="text-xs text-slate-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-slate-800">Paste</button>
                 </div>
             </div>
-            <div id="txtInput" contenteditable="true" class="flex-1 w-full bg-transparent overflow-auto p-6 text-slate-300 focus:outline-none leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:text-slate-600 cursor-text" data-placeholder="Paste your messy text, emails, chat transcripts, or articles here..."></div>>
-            <div class="p-4 border-t border-slate-800 bg-slate-850/50">
+            <div id="txtInput" contenteditable="true" class="flex-1 w-full bg-transparent overflow-auto p-6 text-slate-300 focus:outline-none leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:text-slate-600 cursor-text" data-placeholder="Paste your messy text, emails, chat transcripts, or articles here..."></div>
+            <div class="p-4 border-t border-slate-800 bg-slate-850/50 shrink-0">
                 <button id="btnProcess" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                     Distill Content
@@ -95,7 +104,7 @@
         </section>
 
         <!-- Right Viewport: Output -->
-        <section class="flex-1 flex flex-col bg-slate-900 relative">
+        <section class="flex-[1.5] flex flex-col bg-slate-900 relative min-w-0">
             
             <!-- Loading Overlay -->
             <div id="loadingOverlay" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center hidden">
@@ -103,33 +112,67 @@
                 <p class="text-slate-300 font-medium" id="loadingText">Processing...</p>
             </div>
 
-            <div class="flex items-end px-4 pt-4 border-b border-slate-800 bg-slate-850/50 gap-4">
-                <button class="tab-btn tab-active pb-2 px-1 text-sm font-medium transition-colors" data-target="outMarkdown">Clean Markdown</button>
-                <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outSummary">3-Bullet Summary</button>
-                <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outChecklist">Action Checklist</button>
-                <div class="flex-1"></div>
-                <button id="btnCopy" class="mb-2 text-xs flex items-center gap-1 text-slate-400 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                    <span id="copyText">Copy</span>
-                </button>
+            <div class="flex items-end px-4 pt-4 border-b border-slate-800 bg-slate-850/50 gap-4 shrink-0">
+                <div class="flex-1 overflow-x-auto whitespace-nowrap scrollbar-hide flex items-end gap-4">
+                    <button class="tab-btn tab-active pb-2 px-1 text-sm font-medium transition-colors" data-target="outMarkdown">Clean Markdown</button>
+                    <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outHtml">Clean HTML</button>
+                    <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outDita">DITA XML</button>
+                    <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outJson">JSON Data</button>
+                    <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outSocial">Social Thread</button>
+                    <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outSlack">Slack Format</button>
+                    <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outSummary">3-Bullet Summary</button>
+                    <button class="tab-btn tab-inactive pb-2 px-1 text-sm font-medium transition-colors" data-target="outChecklist">Action Checklist</button>
+                </div>
+                
+                <div class="flex gap-2 sticky right-0 shrink-0 bg-slate-900 pl-2">
+                    <button id="btnExportDoc" class="mb-2 text-xs flex items-center gap-1 text-slate-400 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md" title="Export as Word Document">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="hidden md:inline">DOC</span>
+                    </button>
+                    <button id="btnExportPdf" class="mb-2 text-xs flex items-center gap-1 text-slate-400 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md" title="Export as PDF">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="hidden md:inline">PDF</span>
+                    </button>
+                    <button id="btnCopy" class="mb-2 text-xs flex items-center gap-1 text-slate-400 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md" title="Copy to Clipboard">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span id="copyText">Copy</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Output Canvases -->
             <div class="flex-1 overflow-auto p-6 text-slate-300 leading-relaxed text-sm md:text-base">
                 
-                <!-- Variant 1: Markdown -->
                 <div id="outMarkdown" class="tab-content h-full">
                     <textarea id="txtMarkdown" readonly class="w-full h-full bg-transparent resize-none focus:outline-none font-mono text-sm" placeholder="Processed markdown will appear here..."></textarea>
                 </div>
+                
+                <div id="outHtml" class="tab-content h-full hidden">
+                    <textarea id="txtHtml" readonly class="w-full h-full bg-transparent resize-none focus:outline-none font-mono text-sm" placeholder="Processed HTML will appear here..."></textarea>
+                </div>
+                
+                <div id="outDita" class="tab-content h-full hidden">
+                    <textarea id="txtDita" readonly class="w-full h-full bg-transparent resize-none focus:outline-none font-mono text-sm" placeholder="Processed DITA XML will appear here..."></textarea>
+                </div>
+                
+                <div id="outJson" class="tab-content h-full hidden">
+                    <textarea id="txtJson" readonly class="w-full h-full bg-transparent resize-none focus:outline-none font-mono text-sm" placeholder="AI extracted JSON data will appear here..."></textarea>
+                </div>
+                
+                <div id="outSocial" class="tab-content h-full hidden">
+                    <textarea id="txtSocial" readonly class="w-full h-full bg-transparent resize-none focus:outline-none font-mono text-sm" placeholder="AI generated social thread will appear here..."></textarea>
+                </div>
+                
+                <div id="outSlack" class="tab-content h-full hidden">
+                    <textarea id="txtSlack" readonly class="w-full h-full bg-transparent resize-none focus:outline-none font-mono text-sm" placeholder="AI generated Slack message will appear here..."></textarea>
+                </div>
 
-                <!-- Variant 2: Summary -->
                 <div id="outSummary" class="tab-content h-full hidden">
                     <div id="contentSummary" class="space-y-4">
                         <p class="text-slate-500 italic text-center mt-10">Run "Distill Content" to generate a summary.</p>
                     </div>
                 </div>
 
-                <!-- Variant 3: Checklist -->
                 <div id="outChecklist" class="tab-content h-full hidden">
                     <div id="contentChecklist" class="space-y-2">
                         <p class="text-slate-500 italic text-center mt-10">Run "Distill Content" to extract action items.</p>
@@ -147,6 +190,11 @@
             activeTab: 'outMarkdown',
             outputs: {
                 outMarkdown: '',
+                outHtml: '',
+                outDita: '',
+                outJson: '',
+                outSocial: '',
+                outSlack: '',
                 outSummary: '',
                 outChecklist: ''
             }
@@ -169,10 +217,18 @@
             contents: document.querySelectorAll('.tab-content'),
             
             txtMarkdown: document.getElementById('txtMarkdown'),
+            txtHtml: document.getElementById('txtHtml'),
+            txtDita: document.getElementById('txtDita'),
+            txtJson: document.getElementById('txtJson'),
+            txtSocial: document.getElementById('txtSocial'),
+            txtSlack: document.getElementById('txtSlack'),
+            
             contentSummary: document.getElementById('contentSummary'),
             contentChecklist: document.getElementById('contentChecklist'),
             
             btnCopy: document.getElementById('btnCopy'),
+            btnExportPdf: document.getElementById('btnExportPdf'),
+            btnExportDoc: document.getElementById('btnExportDoc'),
             copyText: document.getElementById('copyText'),
             
             loadingOverlay: document.getElementById('loadingOverlay'),
@@ -188,23 +244,26 @@
 
         // Event Listeners
         function setupEventListeners() {
-            // Settings Modal
             DOM.btnSettings.addEventListener('click', () => DOM.modalSettings.classList.remove('hidden'));
             DOM.btnCloseSettings.addEventListener('click', () => DOM.modalSettings.classList.add('hidden'));
             DOM.btnSaveSettings.addEventListener('click', () => {
                 state.apiKey = DOM.inputApiKey.value.trim();
                 localStorage.setItem('cs_api_key', state.apiKey);
                 DOM.modalSettings.classList.add('hidden');
-                renderPlaceholders(); // Refresh placeholders if key is removed
+                renderPlaceholders();
             });
 
-            // Input Controls
             DOM.btnClear.addEventListener('click', () => {
                 DOM.txtInput.innerHTML = '';
                 DOM.txtMarkdown.value = '';
+                DOM.txtHtml.value = '';
+                DOM.txtDita.value = '';
+                DOM.txtJson.value = '';
+                DOM.txtSocial.value = '';
+                DOM.txtSlack.value = '';
                 DOM.contentSummary.innerHTML = '<p class="text-slate-500 italic text-center mt-10">Run "Distill Content" to generate a summary.</p>';
                 DOM.contentChecklist.innerHTML = '<p class="text-slate-500 italic text-center mt-10">Run "Distill Content" to extract action items.</p>';
-                state.outputs = { outMarkdown: '', outSummary: '', outChecklist: '' };
+                state.outputs = { outMarkdown: '', outHtml: '', outDita: '', outJson: '', outSocial: '', outSlack: '', outSummary: '', outChecklist: '' };
                 renderPlaceholders();
             });
 
@@ -226,7 +285,6 @@
                 }
             });
 
-            // Tabs
             DOM.tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const target = tab.getAttribute('data-target');
@@ -234,10 +292,9 @@
                 });
             });
 
-            // Copy
             DOM.btnCopy.addEventListener('click', copyActiveTab);
-
-            // Process
+            DOM.btnExportPdf.addEventListener('click', exportPDF);
+            DOM.btnExportDoc.addEventListener('click', exportDOCX);
             DOM.btnProcess.addEventListener('click', processText);
         }
 
@@ -269,8 +326,16 @@
         async function copyActiveTab() {
             let textToCopy = '';
             
-            if (state.activeTab === 'outMarkdown') {
-                textToCopy = DOM.txtMarkdown.value;
+            if (['outMarkdown', 'outHtml', 'outDita', 'outJson', 'outSocial', 'outSlack'].includes(state.activeTab)) {
+                const map = {
+                    outMarkdown: DOM.txtMarkdown,
+                    outHtml: DOM.txtHtml,
+                    outDita: DOM.txtDita,
+                    outJson: DOM.txtJson,
+                    outSocial: DOM.txtSocial,
+                    outSlack: DOM.txtSlack
+                };
+                textToCopy = map[state.activeTab].value;
             } else if (state.activeTab === 'outSummary') {
                 const items = DOM.contentSummary.querySelectorAll('li');
                 if(items.length > 0) {
@@ -305,6 +370,65 @@
             }
         }
 
+        function getTextForExport() {
+            if (['outMarkdown', 'outHtml', 'outDita', 'outJson', 'outSocial', 'outSlack'].includes(state.activeTab)) {
+                const map = { outMarkdown: DOM.txtMarkdown, outHtml: DOM.txtHtml, outDita: DOM.txtDita, outJson: DOM.txtJson, outSocial: DOM.txtSocial, outSlack: DOM.txtSlack };
+                return map[state.activeTab].value;
+            } else if (state.activeTab === 'outSummary') {
+                return DOM.contentSummary.innerText;
+            } else if (state.activeTab === 'outChecklist') {
+                return DOM.contentChecklist.innerText;
+            }
+            return "";
+        }
+
+        // PDF Export
+        function exportPDF() {
+            const textToExport = getTextForExport();
+            if (!textToExport) return;
+
+            const printDiv = document.createElement('div');
+            printDiv.id = 'printArea';
+            
+            // If exporting HTML, render it directly to preserve formatting. Otherwise, preserve text format.
+            if (state.activeTab === 'outHtml') {
+                printDiv.innerHTML = textToExport;
+            } else {
+                printDiv.innerText = textToExport;
+            }
+
+            document.body.appendChild(printDiv);
+            document.body.classList.add('printing');
+            window.print();
+            document.body.classList.remove('printing');
+            document.body.removeChild(printDiv);
+        }
+
+        // DOCX Export
+        function exportDOCX() {
+            const textToExport = getTextForExport();
+            if (!textToExport) return;
+
+            let content = '';
+            if (state.activeTab === 'outHtml') {
+                content = textToExport;
+            } else {
+                content = `<pre style="font-family: monospace; white-space: pre-wrap; word-wrap: break-word;">${textToExport.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
+            }
+
+            const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Clean Slate Export</title></head><body>`;
+            const footer = "</body></html>";
+            const sourceHTML = header + content + footer;
+            
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const link = document.createElement("a");
+            link.href = source;
+            link.download = `CleanSlate_${state.activeTab}.doc`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         // Processing Logic
         async function processText() {
             const rawHtml = DOM.txtInput.innerHTML;
@@ -314,31 +438,43 @@
             showLoading('Decontaminating & Processing...');
 
             try {
-                // 1. Decontaminate
                 const cleanText = decontaminateText(rawText);
                 
-                // 2. Generate Markdown
-                const markdown = generateMarkdown(rawHtml);
-                DOM.txtMarkdown.value = markdown;
-                state.outputs.outMarkdown = markdown;
+                // Native Generators
+                DOM.txtMarkdown.value = state.outputs.outMarkdown = generateMarkdown(rawHtml);
+                DOM.txtHtml.value = state.outputs.outHtml = generateHTML(rawHtml);
+                DOM.txtDita.value = state.outputs.outDita = generateDITA(rawHtml);
 
-                // 3 & 4. Summary & Checklist via API (or fallback)
+                // AI Processing
                 if (state.apiKey) {
                     DOM.loadingText.innerText = 'Generating AI Insights...';
                     const aiResults = await fetchAIProcessing(cleanText, state.apiKey);
                     if(aiResults) {
                         state.outputs.outSummary = aiResults.summary;
                         state.outputs.outChecklist = aiResults.checklist;
+                        state.outputs.outJson = aiResults.json_data;
+                        state.outputs.outSocial = aiResults.social_thread;
+                        state.outputs.outSlack = aiResults.slack_format;
+                        
                         renderSummary(aiResults.summary);
                         renderChecklist(aiResults.checklist);
+                        DOM.txtJson.value = aiResults.json_data;
+                        DOM.txtSocial.value = aiResults.social_thread;
+                        DOM.txtSlack.value = aiResults.slack_format;
                     }
                 } else {
-                    // Use placeholder if no API key
                     const ph = getPlaceholders(cleanText);
                     state.outputs.outSummary = ph.summary;
                     state.outputs.outChecklist = ph.checklist;
+                    state.outputs.outJson = ph.json_data;
+                    state.outputs.outSocial = ph.social_thread;
+                    state.outputs.outSlack = ph.slack_format;
+                    
                     renderSummary(ph.summary, true);
                     renderChecklist(ph.checklist, true);
+                    DOM.txtJson.value = ph.json_data;
+                    DOM.txtSocial.value = ph.social_thread;
+                    DOM.txtSlack.value = ph.slack_format;
                 }
 
             } catch (error) {
@@ -349,14 +485,13 @@
             }
         }
 
-        // Decontamination
         function decontaminateText(text) {
             let cleaned = text.replace(/[ \t]+/g, ' '); 
             cleaned = cleaned.replace(/(\r\n|\r|\n){3,}/g, '\n\n');
             return cleaned.trim();
         }
 
-        // Markdown Generation
+        // Markdown Generator
         function generateMarkdown(htmlInput) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlInput, 'text/html');
@@ -413,6 +548,82 @@
             return markdown.trim();
         }
 
+        // HTML Generator
+        function generateHTML(htmlInput) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlInput, 'text/html');
+            
+            function walk(node) {
+                if (node.nodeType === 3) return node.textContent.trim() ? node.textContent : ' ';
+                if (node.nodeType !== 1) return "";
+
+                let inner = "";
+                for (let child of node.childNodes) {
+                    inner += walk(child);
+                }
+                inner = inner.trim();
+                if (!inner) return "";
+
+                const tag = node.tagName.toLowerCase();
+                if (['h1','h2','h3','h4','h5','h6','p','li','ul','ol','strong','em','b','i','a'].includes(tag)) {
+                    if (tag === 'b' || tag === 'strong') return `<strong>${inner}</strong>`;
+                    if (tag === 'i' || tag === 'em') return `<em>${inner}</em>`;
+                    if (tag === 'a') return `<a href="${node.getAttribute('href') || '#'}">${inner}</a>`;
+                    if (tag === 'li') return `\n  <li>${inner}</li>`;
+                    if (tag === 'ul' || tag === 'ol') return `\n<${tag}>\n  ${inner}\n</${tag}>\n`;
+                    return `\n<${tag}>${inner}</${tag}>\n`;
+                }
+                if (tag === 'div' || tag === 'section' || tag === 'article') {
+                    return `\n<p>${inner}</p>\n`;
+                }
+                return inner;
+            }
+
+            let result = walk(doc.body);
+            return result.replace(/\n{3,}/g, '\n\n').trim();
+        }
+
+        // DITA Generator
+        function generateDITA(htmlInput) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlInput, 'text/html');
+            
+            let title = "Clean Slate Output";
+            const firstH = doc.querySelector('h1, h2, h3');
+            if (firstH) {
+                title = firstH.textContent.trim();
+                firstH.remove();
+            }
+
+            function walk(node) {
+                if (node.nodeType === 3) return node.textContent.trim() ? node.textContent : ' ';
+                if (node.nodeType !== 1) return "";
+
+                let inner = "";
+                for (let child of node.childNodes) {
+                    inner += walk(child);
+                }
+                inner = inner.trim();
+                if (!inner) return "";
+
+                const tag = node.tagName.toLowerCase();
+                if (tag === 'b' || tag === 'strong') return `<b>${inner}</b>`;
+                if (tag === 'i' || tag === 'em') return `<i>${inner}</i>`;
+                if (tag === 'a') return `<xref href="${node.getAttribute('href') || '#'}">${inner}</xref>`;
+                if (tag === 'li') return `\n      <li>${inner}</li>`;
+                if (tag === 'ul' || tag === 'ol') return `\n    <ul>${inner}\n    </ul>\n`;
+                if (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4') return `\n    <p><b>${inner}</b></p>\n`;
+                if (tag === 'p' || tag === 'div' || tag === 'section') return `\n    <p>${inner}</p>\n`;
+                
+                return inner;
+            }
+
+            let bodyContent = walk(doc.body);
+            
+            let dita = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">\n<concept id="concept_${Math.floor(Math.random()*10000)}">\n  <title>${title}</title>\n  <conbody>${bodyContent}\n  </conbody>\n</concept>`;
+            return dita;
+        }
+
         // AI Processing
         async function fetchAIProcessing(text, apiKey) {
             try {
@@ -427,9 +638,12 @@
                         messages: [
                             {
                                 role: "system", 
-                                content: `You are an expert text distillation engine. Analyze the provided text and output a JSON object with exactly two keys:
-1. "summary": A JSON array of exactly 3 strings, each being a high-impact, dense bullet point summarizing the core message.
-2. "checklist": A JSON array of strings representing actionable tasks, action items, or deadlines extracted from the text.`
+                                content: `You are an expert text distillation engine. Analyze the provided text and output a JSON object with exactly 5 keys:
+1. "summary": A JSON array of exactly 3 strings (dense bullet points summarizing core message).
+2. "checklist": A JSON array of strings (actionable tasks/deadlines).
+3. "json_data": A structured JSON object containing "title", "author" (if any), "key_topics" (array), and "short_description".
+4. "social_thread": A string formatted as a numbered Twitter/X thread (e.g. "1/5... \\n\\n2/5...").
+5. "slack_format": A string formatted using Slack markdown (with emojis, bolding, blockquotes) optimized for team reading.`
                             },
                             {
                                 role: "user",
@@ -448,7 +662,10 @@
                 const content = JSON.parse(data.choices[0].message.content);
                 return {
                     summary: content.summary || [],
-                    checklist: content.checklist || []
+                    checklist: content.checklist || [],
+                    json_data: JSON.stringify(content.json_data || {}, null, 2),
+                    social_thread: content.social_thread || "",
+                    slack_format: content.slack_format || ""
                 };
             } catch (err) {
                 console.error("AI processing failed:", err);
@@ -459,7 +676,7 @@
 
         // Renderers
         function renderSummary(bullets, isPlaceholder = false) {
-            let html = isPlaceholder ? `<div class="bg-blue-500/10 border border-blue-500/30 text-blue-400 p-3 rounded-lg mb-4 text-sm flex gap-2 items-start"><svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><strong>Demo Mode:</strong> No API key provided. Showing an illustrative example based on your text length. Add your key in Settings for real insights.</div></div>` : '';
+            let html = isPlaceholder ? `<div class="bg-blue-500/10 border border-blue-500/30 text-blue-400 p-3 rounded-lg mb-4 text-sm flex gap-2 items-start"><svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><div><strong>Demo Mode:</strong> No API key provided. Showing illustrative examples. Add your key in Settings for real insights.</div></div>` : '';
             
             if (Array.isArray(bullets)) {
                 html += `<ul class="space-y-3">`;
@@ -498,23 +715,44 @@
         // Placeholders
         function renderPlaceholders() {
             if(!state.apiKey && (!DOM.txtInput.textContent || !DOM.txtInput.textContent.trim())) {
-                DOM.contentSummary.innerHTML = `<p class="text-slate-500 italic text-center mt-10">Add an API Key in Settings to enable AI summarization.</p>`;
-                DOM.contentChecklist.innerHTML = `<p class="text-slate-500 italic text-center mt-10">Add an API Key in Settings to enable AI checklist extraction.</p>`;
+                const msg = `<p class="text-slate-500 italic text-center mt-10">Add an API Key in Settings to enable AI generation.</p>`;
+                DOM.contentSummary.innerHTML = msg;
+                DOM.contentChecklist.innerHTML = msg;
+                DOM.txtJson.value = "";
+                DOM.txtSocial.value = "";
+                DOM.txtSlack.value = "";
             }
         }
 
         function getPlaceholders(text) {
+            const lines = text.split('\n').filter(l => l.trim().length > 0);
+            const title = lines.length > 0 ? lines[0].substring(0, 50) : "Untitled";
+            const desc = lines.length > 1 ? lines[1].substring(0, 100) : "No description available.";
+            
+            // Generate pseudo social thread from text chunks
+            const chunks = text.match(/[\s\S]{1,250}(?!\S)/g) || [desc];
+            const social = chunks.slice(0, 5).map((c, i) => `${i+1}/${Math.min(chunks.length, 5)} 🧵 ${c.trim()}`).join('\n\n');
+
+            const slack = `🚨 *${title}*\n\n> ${desc}\n\n✨ Add your API key in settings for real AI extraction!`;
+
             return {
                 summary: [
-                    "The provided text appears to be a raw data dump requiring structural organization.",
-                    "Key themes include process optimization, communication refinement, and task delegation.",
-                    "Urgent action is needed to sanitize the input and distribute responsibilities."
+                    "Demo mode: Add an API key for deep AI summaries.",
+                    "Your text starts with: " + title,
+                    "Total text length: " + text.length + " characters."
                 ],
                 checklist: [
-                    "Review initial project parameters",
-                    "Configure API key for full AI capabilities",
-                    "Distribute finalized documents to the team"
-                ]
+                    "Review: " + title,
+                    "Add API key in Settings to unlock AI extraction",
+                    "Verify parsed output formats"
+                ],
+                json_data: JSON.stringify({
+                    title: title,
+                    short_description: desc,
+                    key_topics: ["demo", "placeholder", "add_api_key_for_real_data"]
+                }, null, 2),
+                social_thread: social + "\n\n(Provide API key for AI generation)",
+                slack_format: slack
             };
         }
 
